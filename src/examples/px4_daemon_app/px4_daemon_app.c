@@ -105,7 +105,7 @@ int px4_daemon_thread_main(int argc, char *argv[])
 	thread_running = true;
 
 	while (!thread_should_exit) {
-		{
+		//{
 	printf("Hello Sky!\n");
 
 	/* subscribe to sensor_combined topic */
@@ -118,49 +118,42 @@ int px4_daemon_thread_main(int argc, char *argv[])
 	/*orb_advert_t att_pub = orb_advertise(ORB_ID(vehicle_attitude), &att);*/
 
 	/* one could wait for multiple topics with this technique, just using one here */
-	struct pollfd fds[] = {
+	/*struct pollfd fds[] = {
 		{ .fd = sensor_sub_fd,   .events = POLLIN },
-		/* there could be more file descriptors here, in the form like:
+		 * there could be more file descriptors here, in the form like:
 		 * { .fd = other_sub_fd,   .events = POLLIN },
 		 */
-	};
+	//};
 
-	int error_counter = 0;
+	/*int error_counter = 0;*/
 
-	for (int i = 0; i < 5; i++) {
+	//for (int i = 0; i < 5; i++) {
 		/* wait for sensor update of 1 file descriptor for 1000 ms (1 second) */
-		int poll_ret = poll(fds, 1, 1000);
+		/*int poll_ret = poll(fds, 1, 1000);*/
 	 
 		/* handle the poll result */
-		if (poll_ret == 0) {
+		//if (poll_ret == 0) {
 			/* this means none of our providers is giving us data */
-			printf("[px4_simple_app] Got no data within a second\n");
-		} else if (poll_ret < 0) {
+		//	printf("[px4_simple_app] Got no data within a second\n");
+		//} else if (poll_ret < 0) {
 			/* this is seriously bad - should be an emergency */
-			if (error_counter < 10 || error_counter % 50 == 0) {
+		//	if (error_counter < 10 || error_counter % 50 == 0) {
 				/* use a counter to prevent flooding (and slowing us down) */
-				printf("[px4_simple_app] ERROR return value from poll(): %d\n"
-					, poll_ret);
-			}
-			error_counter++;
-		} else {
+		//		printf("[px4_simple_app] ERROR return value from poll(): %d\n"
+		//			, poll_ret);
+		//	}
+		//	error_counter++;
+		//} else {
 	 
-			if (fds[0].revents & POLLIN) {
+			//if (fds[0].revents & POLLIN) {
 				/* obtained data for the first file descriptor */
 				struct sensor_combined_s raw;
 				/* copy sensors raw data into local buffer */
 				orb_copy(ORB_ID(sensor_combined), sensor_sub_fd, &raw);
-				printf("[px4_simple_app] Accelerometer:\t%8.4f\t%8.4f\t%8.4f\n",
-					(double)raw.adc_voltage_v[0],
-					(double)raw.adc_voltage_v[1],
-					(double)raw.adc_voltage_v[2],
-					(double)raw.adc_voltage_v[3],
-					(double)raw.adc_voltage_v[4],
-					(double)raw.adc_voltage_v[5],
-					(double)raw.adc_voltage_v[6],
-					(double)raw.adc_voltage_v[7],
-					(double)raw.adc_voltage_v[8],
-					(double)raw.adc_voltage_v[9]);
+
+				printf("[px4_simple_app] Accelerometer:\t%8.4f\n",
+					(double)raw.adc_voltage_v[1]);
+
 
 				/* set att and publish this information for other apps */
 				/*att.roll = raw.adc_voltage_v[0];
@@ -168,16 +161,16 @@ int px4_daemon_thread_main(int argc, char *argv[])
 				att.yaw = raw.adc_voltage_v[2];
 				orb_publish(ORB_ID(vehicle_attitude), att_pub, &att);*/
 				
-			}
+			//}
 			/* there could be more file descriptors here, in the form like:
 			 * if (fds[1..n].revents & POLLIN) {}
 			 */
-		}
-	}
+		//}
+	//}
 
-	return 0;
-}
-		sleep(10);
+	//return 0;
+//}
+		usleep(100000);
 	}
 
 	warnx("[daemon] exiting.\n");
