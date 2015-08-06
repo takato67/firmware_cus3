@@ -124,6 +124,7 @@ arming_state_transition(struct vehicle_status_s *status,		///< current vehicle s
 		 * Get sensing state if necessary
 		 */
 		int prearm_ret = OK;
+		
 
 		/* only perform the check if we have to */
 		if (fRunPreArmChecks && new_arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
