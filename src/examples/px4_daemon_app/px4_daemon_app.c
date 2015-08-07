@@ -170,7 +170,7 @@ int px4_daemon_thread_main(int argc, char *argv[])
 
 	//return 0;
 //}
-		usleep(100000);
+		sleep(3);
 	}
 
 	warnx("[daemon] exiting.\n");
