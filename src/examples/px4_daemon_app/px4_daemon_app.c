@@ -151,8 +151,8 @@ int px4_daemon_thread_main(int argc, char *argv[])
 				/* copy sensors raw data into local buffer */
 				orb_copy(ORB_ID(sensor_combined), sensor_sub_fd, &raw);
 
-				printf("[px4_simple_app] Accelerometer:\t%8.4f\n",
-					(double)raw.adc_voltage_v[1]);
+				printf("[px4_simple_app] Accelerometer:\t%8.4f\t%8.4f\n",
+					(double)raw.adc_voltage_v[1],(double)raw.accelerometer_m_s2[0]);
 
 
 				/* set att and publish this information for other apps */
@@ -170,7 +170,7 @@ int px4_daemon_thread_main(int argc, char *argv[])
 
 	//return 0;
 //}
-		sleep(3);
+		sleep(5);
 	}
 
 	warnx("[daemon] exiting.\n");
