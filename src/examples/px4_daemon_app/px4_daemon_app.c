@@ -71,7 +71,7 @@ int px4_daemon_app_main(int argc, char *argv[])
 		daemon_task = px4_task_spawn_cmd("daemon",
 					     SCHED_DEFAULT,
 					     SCHED_PRIORITY_DEFAULT,
-					     2000,
+					     4000,
 					     px4_daemon_thread_main,
 					     (argv) ? (char * const *)&argv[2] : (char * const *)NULL);
 		return 0;
@@ -110,7 +110,7 @@ int px4_daemon_thread_main(int argc, char *argv[])
 
 	/* subscribe to sensor_combined topic */
 	int sensor_sub_fd = orb_subscribe(ORB_ID(sensor_combined));
-	orb_set_interval(sensor_sub_fd, 1000);
+	orb_set_interval(sensor_sub_fd, 2000);
 
 	/* advertise attitude topic */
 	/*struct vehicle_attitude_s att;*/
@@ -151,8 +151,8 @@ int px4_daemon_thread_main(int argc, char *argv[])
 				/* copy sensors raw data into local buffer */
 				orb_copy(ORB_ID(sensor_combined), sensor_sub_fd, &raw);
 
-				printf("[px4_simple_app] Accelerometer:\t%8.4f\t%8.4f\n",
-					(double)raw.adc_voltage_v[1],(double)raw.accelerometer_m_s2[0]);
+				printf("[px4_simple_app] Accelerometer:\t%8.4f\n",
+					(double)raw.adc_voltage_v[1]);
 
 
 				/* set att and publish this information for other apps */
@@ -170,7 +170,7 @@ int px4_daemon_thread_main(int argc, char *argv[])
 
 	//return 0;
 //}
-		sleep(5);
+		sleep(10);
 	}
 
 	warnx("[daemon] exiting.\n");
