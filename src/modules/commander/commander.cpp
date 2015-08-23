@@ -1117,9 +1117,8 @@ int commander_thread_main(int argc, char *argv[])
 
 	/* Subscribe to sensor topic */
 	int sensor_sub = orb_subscribe(ORB_ID(sensor_combined));
-	struct sensor_combined_s sensors,adc_test;
+	struct sensor_combined_s sensors;
 	memset(&sensors, 0, sizeof(sensors));
-	memset(&adc_test, 0, sizeof(adc_test));
 
 	/* Subscribe to differential pressure topic */
 	int diff_pres_sub = orb_subscribe(ORB_ID(differential_pressure));
@@ -1242,6 +1241,9 @@ int commander_thread_main(int argc, char *argv[])
 			/* try to open the mavlink log device every once in a while */
 			mavlink_fd = px4_open(MAVLINK_LOG_DEVICE, 0);
 		}
+
+		printf("adc volume :\t%8.4f\n",							/*write it by myself*/
+					(double)sensors.adc_voltage_v[1]);			/*write it by myself*/
 
 		arming_ret = TRANSITION_NOT_CHANGED;
 
@@ -1379,12 +1381,6 @@ int commander_thread_main(int argc, char *argv[])
 		}
 
 		orb_check(sensor_sub, &updated);
-		//書き加え
-		orb_copy(ORB_ID(adc_test), sensor_sub, &adc_test);
-		printf("adc_test:\t%8.4f\n",
-					(double)adc_test.adc_voltage_v[1]);
-		//終わり
-
 
 		if (updated) {
 			orb_copy(ORB_ID(sensor_combined), sensor_sub, &sensors);
