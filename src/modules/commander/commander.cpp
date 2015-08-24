@@ -1242,9 +1242,7 @@ int commander_thread_main(int argc, char *argv[])
 			mavlink_fd = px4_open(MAVLINK_LOG_DEVICE, 0);
 		}
 
-		printf("adc volume :\t%8.4f\n",							/*write it by myself*/
-					(double)sensors.adc_voltage_v[1]);			/*write it by myself*/
-
+		
 		arming_ret = TRANSITION_NOT_CHANGED;
 
 
@@ -1815,6 +1813,20 @@ int commander_thread_main(int argc, char *argv[])
 			/* prevent further feedback until the mission changes */
 			_last_mission_instance = mission_result.instance_count;
 		}
+
+		printf("adc volume :\t%8.4f\n",							/*write it by myself*/
+					(double)sensors.adc_voltage_v[1]);			/*write it by myself*/
+
+		if (sensors.adc_voltage_v[1] <= 3){
+			arming_ret = arming_state_transition(&status, &safety, vehicle_status_s::ARMING_STATE_ARMED, &armed, true /* fRunPreArmChecks */,
+										     mavlink_fd);		/*write it by myself*/
+
+						if (arming_ret == TRANSITION_CHANGED) {	/*write it by myself*/
+							arming_state_changed = true;		/*write it by myself*/
+						}										/*write it by myself*/
+		}														/*write it by myself*/
+
+
 
 		/* RC input check */
 		if (!(status.rc_input_mode == vehicle_status_s::RC_IN_MODE_OFF) && !status.rc_input_blocked && sp_man.timestamp != 0 &&
