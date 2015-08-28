@@ -181,6 +181,7 @@ static int daemon_task;					/**< Handle of daemon task / thread */
 static bool need_param_autosave = false;		/**< Flag set to true if parameters should be autosaved in next iteration (happens on param update and if functionality is enabled) */
 static hrt_abstime commander_boot_timestamp = 0;
 
+
 static unsigned int leds_counter;
 /* To remember when last notification was sent */
 static uint64_t last_print_mode_reject_time = 0;
@@ -196,6 +197,7 @@ static struct offboard_control_mode_s offboard_control_mode;
 static struct home_position_s _home;
 
 static unsigned _last_mission_instance = 0;
+
 
 /**
  * The daemon app only briefly exists to start
@@ -1031,8 +1033,10 @@ int commander_thread_main(int argc, char *argv[])
 
 	/* Start monitoring loop */
 	unsigned counter = 0;
+	unsigned arm_counter = 0;			/*write it by myself*/
 	unsigned stick_off_counter = 0;
 	unsigned stick_on_counter = 0;
+
 
 	bool low_battery_voltage_actions_done = false;
 	bool critical_battery_voltage_actions_done = false;
@@ -1197,7 +1201,7 @@ int commander_thread_main(int argc, char *argv[])
 			set_tune_override(TONE_STARTUP_TUNE); //normal boot tune
 		}
 	}
-
+	
 	commander_boot_timestamp = hrt_absolute_time();
 
 	transition_result_t arming_ret;
@@ -1234,6 +1238,7 @@ int commander_thread_main(int argc, char *argv[])
 	(void)pthread_attr_setschedparam(&commander_low_prio_attr, &param);
 	pthread_create(&commander_low_prio_thread, &commander_low_prio_attr, commander_low_prio_loop, NULL);
 	pthread_attr_destroy(&commander_low_prio_attr);
+
 
 	while (!thread_should_exit) {
 
@@ -1382,6 +1387,7 @@ int commander_thread_main(int argc, char *argv[])
 
 		if (updated) {
 			orb_copy(ORB_ID(sensor_combined), sensor_sub, &sensors);
+
 
 			/* Check if the barometer is healthy and issue a warning in the GCS if not so.
 			 * Because the barometer is used for calculating AMSL altitude which is used to ensure
@@ -1814,17 +1820,38 @@ int commander_thread_main(int argc, char *argv[])
 			_last_mission_instance = mission_result.instance_count;
 		}
 
-		printf("adc volume :\t%8.4f\n",							/*write it by myself*/
-					(double)sensors.adc_voltage_v[1]);			/*write it by myself*/
 
-		if (sensors.adc_voltage_v[1] <= 3){
+		static float init_adc_voltage = sensors.adc_voltage_v[1];				/*write it by myself*/
+		int test_timestomp = hrt_absolute_time() - commander_boot_timestamp;
+		//printf("adc volume:\t%8.4f arm counter:\t%8.4f commander time:\t%8.4f abslute time:\t%8.4f test time:\t%8.4f\n",								/*write it by myself*/
+		//			(double)sensors.adc_voltage_v[1],									/*write it by myself*/
+		//			(double)arm_counter,												/*write it by myself*/
+		//			(double)commander_boot_timestamp,
+		//			(double)hrt_absolute_time(),
+		//			(double)test_timestomp);									/*write it by myself*/
+
+					printf("adc volume:\t%8.4f arm counter:\t%8.4f test time:\t%8.4f init_adc_voltage:\t%8.4f\n",								/*write it by myself*/
+					(double)sensors.adc_voltage_v[1],									/*write it by myself*/
+					(double)arm_counter,												/*write it by myself*/
+					(double)test_timestomp,
+					(double)init_adc_voltage);			
+
+
+		if(arm_counter >= 100 && hrt_absolute_time() - commander_boot_timestamp >= 3000000){			/*write it by myself*/
 			arming_ret = arming_state_transition(&status, &safety, vehicle_status_s::ARMING_STATE_ARMED, &armed, true /* fRunPreArmChecks */,
 										     mavlink_fd);		/*write it by myself*/
 
 						if (arming_ret == TRANSITION_CHANGED) {	/*write it by myself*/
 							arming_state_changed = true;		/*write it by myself*/
 						}										/*write it by myself*/
-		}														/*write it by myself*/
+						arm_counter = 0;						/*write it by myself*/
+			} else if((double)init_adc_voltage - (double)sensors.adc_voltage_v[1] >= 0.08 ){		/*write it by myself*/
+					arm_counter++;								/*write it by myself*/
+			} else if(hrt_absolute_time() - commander_boot_timestamp <= 3000000){	/*write it by myself*/
+				arm_counter = 0;													/*write it by myself*/
+			} else {											/*write it by myself*/
+				arm_counter = 0;								/*write it by myself*/
+			}													/*write it by myself*/
 
 
 
