@@ -180,6 +180,7 @@ static volatile bool thread_running = false;		/**< daemon status flag */
 static int daemon_task;					/**< Handle of daemon task / thread */
 static bool need_param_autosave = false;		/**< Flag set to true if parameters should be autosaved in next iteration (happens on param update and if functionality is enabled) */
 static hrt_abstime commander_boot_timestamp = 0;
+static int p_sensor_aming_switch_state = 0;				/*wrote it by myself*/
 
 
 static unsigned int leds_counter;
@@ -1033,7 +1034,8 @@ int commander_thread_main(int argc, char *argv[])
 
 	/* Start monitoring loop */
 	unsigned counter = 0;
-	unsigned arm_counter = 0;			/*write it by myself*/
+	unsigned arm_counter = 0;			/*wrote it by myself*/
+	unsigned disarm_counter = 0;			/*wrote it by myself*/
 	unsigned stick_off_counter = 0;
 	unsigned stick_on_counter = 0;
 
@@ -1821,38 +1823,55 @@ int commander_thread_main(int argc, char *argv[])
 		}
 
 
-		static float init_adc_voltage = sensors.adc_voltage_v[1];				/*write it by myself*/
-		int test_timestomp = hrt_absolute_time() - commander_boot_timestamp;
-		//printf("adc volume:\t%8.4f arm counter:\t%8.4f commander time:\t%8.4f abslute time:\t%8.4f test time:\t%8.4f\n",								/*write it by myself*/
-		//			(double)sensors.adc_voltage_v[1],									/*write it by myself*/
-		//			(double)arm_counter,												/*write it by myself*/
-		//			(double)commander_boot_timestamp,
-		//			(double)hrt_absolute_time(),
-		//			(double)test_timestomp);									/*write it by myself*/
 
-					printf("adc volume:\t%8.4f arm counter:\t%8.4f test time:\t%8.4f init_adc_voltage:\t%8.4f\n",								/*write it by myself*/
-					(double)sensors.adc_voltage_v[1],									/*write it by myself*/
-					(double)arm_counter,												/*write it by myself*/
-					(double)test_timestomp,
-					(double)init_adc_voltage);			
+		static float init_adc_voltage = sensors.adc_voltage_v[1];				/*wrote it by myself*/
+		int test_timestomp = hrt_absolute_time() - commander_boot_timestamp;	/*wrote it by myself*/
 
-
-		if(arm_counter >= 100 && hrt_absolute_time() - commander_boot_timestamp >= 3000000){			/*write it by myself*/
+					printf("adc volume:\t%8.4f arm counter:\t%8.4f disarm counter:\t%8.4f p_sensor_aming_switch_state:\t%8.4f test time:\t%8.4f init_adc_voltage:\t%8.4f\n",	/*wrote it by myself*/
+					(double)sensors.adc_voltage_v[1],									/*wrote it by myself*/
+					(double)arm_counter,												/*wrote it by myself*/
+					(double)disarm_counter,	
+					(double)p_sensor_aming_switch_state,								/*wrote it by myself*/
+					(double)test_timestomp,												/*wrote it by myself*/
+					(double)init_adc_voltage);											/*wrote it by myself*/
+	if(p_sensor_aming_switch_state == 0){
+		if(arm_counter >= 100 && hrt_absolute_time() - commander_boot_timestamp >= 3000000){			/*wrote it by myself*/
 			arming_ret = arming_state_transition(&status, &safety, vehicle_status_s::ARMING_STATE_ARMED, &armed, true /* fRunPreArmChecks */,
-										     mavlink_fd);		/*write it by myself*/
+										     mavlink_fd);		/*wrote it by myself*/
+						p_sensor_aming_switch_state = 1;
+						if (arming_ret == TRANSITION_CHANGED) {	/*wrote it by myself*/
+							arming_state_changed = true;		/*wrote it by myself*/
+						}										/*wrote it by myself*/
+						arm_counter = 0;						/*wrote it by myself*/
+			} else if((double)init_adc_voltage - (double)sensors.adc_voltage_v[1] >= 0.50 ){		/*wrote it by myself*/
+					arm_counter++;								/*wrote it by myself*/
+			} else if(hrt_absolute_time() - commander_boot_timestamp <= 3000000){	/*wrote it by myself*/
+				arm_counter = 0;													/*wrote it by myself*/
+			} else {											/*wrote it by myself*/
+				arm_counter = 0;								/*wrote it by myself*/
+			}													/*wrote it by myself*/
+	} else if(p_sensor_aming_switch_state == 1){
 
-						if (arming_ret == TRANSITION_CHANGED) {	/*write it by myself*/
-							arming_state_changed = true;		/*write it by myself*/
-						}										/*write it by myself*/
-						arm_counter = 0;						/*write it by myself*/
-			} else if((double)init_adc_voltage - (double)sensors.adc_voltage_v[1] >= 0.08 ){		/*write it by myself*/
-					arm_counter++;								/*write it by myself*/
-			} else if(hrt_absolute_time() - commander_boot_timestamp <= 3000000){	/*write it by myself*/
-				arm_counter = 0;													/*write it by myself*/
-			} else {											/*write it by myself*/
-				arm_counter = 0;								/*write it by myself*/
-			}													/*write it by myself*/
+		if(disarm_counter >= 10 && hrt_absolute_time() - commander_boot_timestamp >= 3000000 && p_sensor_aming_switch_state == 1){			/*wrote it by myself*/
+			arming_state_t new_arming_state = (status.arming_state == vehicle_status_s::ARMING_STATE_ARMED ? vehicle_status_s::ARMING_STATE_STANDBY :
+									   vehicle_status_s::ARMING_STATE_STANDBY_ERROR);
+					arming_ret = arming_state_transition(&status, &safety, new_arming_state, &armed, true /* fRunPreArmChecks */,
+									     mavlink_fd);			/*wrote it by myself*/
+						p_sensor_aming_switch_state = 0;
+						if (arming_ret == TRANSITION_CHANGED) {	/*wrote it by myself*/
+							arming_state_changed = true;		/*wrote it by myself*/
+						}										/*wrote it by myself*/
+						disarm_counter = 0;						/*wrote it by myself*/
+			} else if((double)init_adc_voltage - (double)sensors.adc_voltage_v[1] >= 0.50 ){		/*wrote it by myself*/
+					disarm_counter++;								/*wrote it by myself*/
+			} else if(hrt_absolute_time() - commander_boot_timestamp <= 3000000){	/*wrote it by myself*/
+				disarm_counter = 0;													/*wrote it by myself*/
+			} else {											/*wrote it by myself*/
+				disarm_counter = 0;								/*wrote it by myself*/
+			}													/*wrote it by myself*/
+	} else {													/*add the flight mode control program*/
 
+	}															/*wrote it by myself*/
 
 
 		/* RC input check */
