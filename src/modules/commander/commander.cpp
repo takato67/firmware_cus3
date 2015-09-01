@@ -181,7 +181,7 @@ static int daemon_task;					/**< Handle of daemon task / thread */
 static bool need_param_autosave = false;		/**< Flag set to true if parameters should be autosaved in next iteration (happens on param update and if functionality is enabled) */
 static hrt_abstime commander_boot_timestamp = 0;
 static int p_sensor_aming_switch_state = 0;				/*wrote it by myself*/
-
+static bool toggle_safety_switch = false;				/*wrote it by myself*/
 
 static unsigned int leds_counter;
 /* To remember when last notification was sent */
@@ -1825,15 +1825,37 @@ int commander_thread_main(int argc, char *argv[])
 
 
 		static float init_adc_voltage = sensors.adc_voltage_v[1];				/*wrote it by myself*/
-		int test_timestomp = hrt_absolute_time() - commander_boot_timestamp;	/*wrote it by myself*/
+		static int init_return_switch = sp_man.return_switch;					/*wrote it by myself*/
+		//int test_timestomp = hrt_absolute_time() - commander_boot_timestamp;	/*wrote it by myself*/
 
-					printf("adc volume:\t%8.4f arm counter:\t%8.4f disarm counter:\t%8.4f p_sensor_aming_switch_state:\t%8.4f test time:\t%8.4f init_adc_voltage:\t%8.4f\n",	/*wrote it by myself*/
-					(double)sensors.adc_voltage_v[1],									/*wrote it by myself*/
-					(double)arm_counter,												/*wrote it by myself*/
-					(double)disarm_counter,	
-					(double)p_sensor_aming_switch_state,								/*wrote it by myself*/
-					(double)test_timestomp,												/*wrote it by myself*/
-					(double)init_adc_voltage);											/*wrote it by myself*/
+	if(sp_man.return_switch == 3){										/*wrote it by myself*/
+		sp_man.return_switch = init_return_switch;								/*wrote it by myself*/
+	} else if (sp_man.return_switch == 2){									/*wrote it by myself*/
+		sp_man.return_switch = init_return_switch;								/*wrote it by myself*/
+		toggle_safety_switch = true;											/*wrote it by myself*/
+	} else {																	/*wrote it by myself*/
+	}																			/*wrote it by myself*/
+
+
+				//	printf("adc volume:\t%8.4f arm counter:\t%8.4f disarm counter:\t%8.4f p_sensor_aming_switch_state:\t%8.4f test time:\t%8.4f init_adc_voltage:\t%8.4f\n",	/*wrote it by myself*/
+				//	(double)sensors.adc_voltage_v[1],									/*wrote it by myself*/
+				//	(double)arm_counter,												/*wrote it by myself*/
+				//	(double)disarm_counter,	
+				//	(double)p_sensor_aming_switch_state,								/*wrote it by myself*/
+				//	(double)test_timestomp,												/*wrote it by myself*/
+				//	(double)init_adc_voltage);											/*wrote it by myself*/
+
+				printf("return_switch: \t%8.4f\t init_return_switch: \t%8.4f\t toggle_safety_switch: \t%8.4f\n",	/*wrote it by myself*/									/*wrote it by myself*/
+					(double)sp_man.return_switch,																			/*wrote it by myself*/
+					(double)init_return_switch,																		/*wrote it by myself*/
+					(double)toggle_safety_switch);																	/*wrote it by myself*/
+
+
+	if (toggle_safety_switch == true)
+	{
+		/*Here, i will make the safety switch of transition of main mood*/
+	}
+
 	if(p_sensor_aming_switch_state == 0){
 		if(arm_counter >= 100 && hrt_absolute_time() - commander_boot_timestamp >= 3000000){			/*wrote it by myself*/
 			arming_ret = arming_state_transition(&status, &safety, vehicle_status_s::ARMING_STATE_ARMED, &armed, true /* fRunPreArmChecks */,
